@@ -53,12 +53,12 @@ end
 player_ships = []
 @player_battleship = { coordinates: [[1, 2], [1, 3], [1, 4]], status: "Alive", spaces_taken: [] }
 @player_cruiser = { coordinates: [[1, 5], [2, 5]], status: "Alive", spaces_taken: [] }
-@player_destroyer = { coordinates: [1, 5], status: "Alive" }
+@player_destroyer = { coordinates: [5, 5], status: "Alive" }
 
 computer_ships = []
 @computer_battleship = { coordinates: [[1, 2], [1, 3], [1, 4]], status: "Alive", spaces_taken: [] }
 @computer_cruiser = { coordinates: [[1, 5], [2, 5]], status: "Alive", spaces_taken: [] }
-@computer_destroyer = { coordinates: [1, 5], status: "Alive" }
+@computer_destroyer = { coordinates: [5, 5], status: "Alive" }
   
 @player_board = []
 5.times { @player_board << [" ", " ", " ", " ", " "] }
@@ -66,11 +66,11 @@ computer_ships = []
 @computer_board = []
 5.times { @computer_board << [" ", " ", " ", " ", " "] }
 
-computer_possible_moves = (1..5).to_a.product((1..5).to_a)
+computer_possible_moves = (1..5).to_a.product((1..5).to_a).shuffle
 
 display_board
 
-loop do
+begin
   player_guess = gets.chomp.split(",").map(&:strip).map(&:to_i)
 
   if @computer_battleship[:coordinates].include?(player_guess)
@@ -87,17 +87,21 @@ loop do
     end
     @computer_board[player_guess[0] - 1][player_guess[1] - 1] = "X"
   end
-  if @computer_destroyer[:coordinates].include?(player_guess)
-    @computer_destroyer[:spaces_taken] << player_guess
+  if @computer_destroyer[:coordinates] == player_guess
     @computer_destroyer[:status] = "Sunk"
     @computer_board[player_guess[0] - 1][player_guess[1] - 1] = "X"
   end
 
-  if !@computer_destroyer[:coordinates].include?(player_guess) && !@computer_cruiser[:coordinates].include?(player_guess) && !@computer_battleship[:coordinates].include?(player_guess) 
+  if @computer_destroyer[:status] == "Sunk" && @computer_cruiser[:status] == "Sunk" && @computer_battleship[:status] == "Sunk"
+    @winner = "Liam"
+  end
+
+  if !(@computer_destroyer[:coordinates] == player_guess) && !@computer_cruiser[:coordinates].include?(player_guess) && !@computer_battleship[:coordinates].include?(player_guess)
     @computer_board[player_guess[0] - 1][player_guess[1] - 1] = "/"
   end
 
-  computer_guess = computer_possible_moves.shuffle.shift
+  computer_guess = computer_possible_moves.shift
+
   if @player_battleship[:coordinates].include?(computer_guess)
     @player_battleship[:spaces_taken] << computer_guess
     if @player_battleship[:spaces_taken].size == 3
@@ -105,6 +109,7 @@ loop do
     end
     @player_board[computer_guess[0] - 1][computer_guess[1] - 1] = "X"
   end
+
   if @player_cruiser[:coordinates].include?(computer_guess)
     @player_cruiser[:spaces_taken] << computer_guess
     if @player_cruiser[:spaces_taken].size == 2
@@ -112,21 +117,26 @@ loop do
     end
     @player_board[computer_guess[0] - 1][computer_guess[1] - 1] = "X"
   end
-  if @player_destroyer[:coordinates].include?(computer_guess)
-    @player_destroyer[:spaces_taken] << computer
+
+  if @player_destroyer[:coordinates] == computer_guess
     @player_destroyer[:status] = "Sunk"
     @player_board[computer_guess[0] - 1][computer_guess[1] - 1] = "X"
   end
 
-  if !@player_destroyer[:coordinates].include?(computer_guess) && !@player_cruiser[:coordinates].include?(computer_guess) && !@player_battleship[:coordinates].include?(computer_guess) 
+  if !(@player_destroyer[:coordinates] == computer_guess) && !@player_cruiser[:coordinates].include?(computer_guess) && !@player_battleship[:coordinates].include?(computer_guess)
     @player_board[computer_guess[0] - 1][computer_guess[1] - 1] = "/"
+  end
+  
+  if @player_destroyer[:status] == "Sunk" && @player_cruiser[:status] == "Sunk" && @player_battleship[:status] == "Sunk"
+    @winner = "R2D2"
   end
 
   display_board
-end
+end until @winner
+
+puts "\n\n#{@winner} is the winner!"
 
 
-# Ship
 # Player is randomly allocated 3 ships (1 destroyer, 1 cruiser, 1 battleship)
   # Create player's ships array
   # Create battleship and put in ships array
